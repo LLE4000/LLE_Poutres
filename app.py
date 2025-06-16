@@ -5,7 +5,7 @@ import json
 from fpdf import FPDF
 
 # Configuration du thème Streamlit
-st.set_page_config(page_title="Calcul armatures – Béton BA", layout="centered")
+st.set_page_config(page_title="Calcul armatures - Béton BA", layout="centered")
 
 # Titre principal
 st.markdown("""
@@ -60,16 +60,16 @@ def generer_pdf(projet, moments, geometrie, beton, acier, resultats):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Note de calcul – Projet : {projet}", ln=True)
+    pdf.cell(200, 10, txt=f"Note de calcul - Projet : {projet}", ln=True)
     pdf.cell(200, 10, txt=f"Béton : {beton}, Acier : {acier}", ln=True)
     pdf.cell(200, 10, txt=f"Dimensions : b = {geometrie['b']} mm, h = {geometrie['h']} mm, enrobage = {geometrie['enrobage']} mm", ln=True)
 
     for i, m in enumerate(moments):
         d, As = resultats[i]
         titre = m["nom"]
-        pdf.cell(200, 10, txt=f"{titre} – M = {m['moment']} kNm", ln=True)
+        pdf.cell(200, 10, txt=f"{titre} - M = {m['moment']} kNm", ln=True)
         pdf.cell(200, 10, txt=f"d = sqrt(M * 10^6 / (mu * sigma * b)) = {d:.1f} mm", ln=True)
-        pdf.cell(200, 10, txt=f"As = M * 10^6 / (fyd * 0.9 * d) = {As:.1f} mm²", ln=True)
+        pdf.cell(200, 10, txt=f"As = M * 10^6 / (fyd * 0.9 * d) = {As:.1f} mm2", ln=True)
 
     return pdf.output(dest='S').encode('latin1')
 
@@ -109,7 +109,7 @@ for m in moments:
     st.latex(r"d = \sqrt{rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
     st.write(f"Hauteur utile : **d = {d:.1f} mm** (limite max = {h - enrobage:.1f} mm)")
     st.latex(r"A_s = rac{M \cdot 10^6}{f_{yd} \cdot 0.9 \cdot d}")
-    st.write(f"Armature tendue requise : **A_s = {As:.1f} mm²**")
+    st.write(f"Armature tendue requise : **A_s = {As:.1f} mm2**")
 
 # --- PDF téléchargeable ---
 pdf_data = generer_pdf(nom_projet, moments, {"b": b, "h": h, "enrobage": enrobage}, beton, acier, resultats)
