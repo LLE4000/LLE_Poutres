@@ -4,6 +4,29 @@ import math
 import json
 from fpdf import FPDF
 
+# Configuration du thème Streamlit
+st.set_page_config(page_title="Calcul armatures – Béton BA", layout="centered")
+
+# Titre principal
+st.markdown("""
+    <style>
+        body {
+            background-color: #f0f0f0;
+        }
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .stButton>button {
+            background-color: #d3d3d3;
+            color: black;
+        }
+    </style>
+    <div class='title'>Calcul d'armatures - Procédé 30.37</div>
+""", unsafe_allow_html=True)
+
 # --- Coefficients Procédé 30.37 ---
 beton_coeffs = {
     "C20/25": {"mu": 0.1363, "sigma": 12.96},
@@ -17,7 +40,6 @@ acier_fyk = {
     "BE 400": 400,
 }
 
-# --- Fonctions de calcul ---
 def calculer_armatures(M_kNm, b, beton, acier, h, enrobage):
     mu = beton_coeffs[beton]["mu"]
     sigma = beton_coeffs[beton]["sigma"]
@@ -39,21 +61,20 @@ def generer_pdf(projet, moments, geometrie, beton, acier, resultats):
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt=f"Note de calcul – Projet : {projet}", ln=True)
-
     pdf.cell(200, 10, txt=f"Béton : {beton}, Acier : {acier}", ln=True)
     pdf.cell(200, 10, txt=f"Dimensions : b = {geometrie['b']} mm, h = {geometrie['h']} mm, enrobage = {geometrie['enrobage']} mm", ln=True)
 
     for i, m in enumerate(moments):
         d, As = resultats[i]
         titre = m["nom"]
-        pdf.cell(200, 10, txt=f"{titre} – M = {m['moment']} kNm → d = {d:.1f} mm, As = {As:.1f} mm²", ln=True)
+        pdf.cell(200, 10, txt=f"{titre} – M = {m['moment']} kNm", ln=True)
+        pdf.cell(200, 10, txt=f"d = sqrt(M·10^6 / (μ·σ·b)) = {d:.1f} mm", ln=True)
+        pdf.cell(200, 10, txt=f"As = M·10^6 / (fyd·0.9·d) = {As:.1f} mm²", ln=True)
 
     return pdf.output(dest='S').encode('latin1')
 
 # --- Interface utilisateur ---
-st.title("Calcul d'armatures - Procédé 30.37")
-
-nom_projet = st.text_input("Nom du projet", "Projet sans nom")
+nom_projet = st.text_input("Nom du projet", "Projet béton armé")
 beton = st.selectbox("Classe de béton", list(beton_coeffs.keys()))
 acier = st.selectbox("Type d'acier", list(acier_fyk.keys()))
 
@@ -79,30 +100,17 @@ else:
     M = st.number_input("Moment fléchissant M (kNm)", value=120.0)
     moments = [{"nom": "Moment", "moment": abs(M)}]
 
-# --- Calculs ---
+# --- Calculs et affichage ---
 resultats = []
 for m in moments:
     d, As = calculer_armatures(m["moment"], b, beton, acier, h, enrobage)
     resultats.append((d, As))
     st.markdown(f"### {m['nom']}")
     st.latex(r"d = \sqrt{rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
-    st.write(f"Hauteur utile d = {d:.1f} mm (max = {h - enrobage:.1f} mm)")
+    st.write(f"Hauteur utile : **d = {d:.1f} mm** (limite max = {h - enrobage:.1f} mm)")
     st.latex(r"A_s = rac{M \cdot 10^6}{f_{yd} \cdot 0.9 \cdot d}")
-    st.write(f"Section d’armature A_s = {As:.1f} mm²")
+    st.write(f"Armature tendue requise : **A_s = {As:.1f} mm²**")
 
-# --- Enregistrement du projet ---
-if st.button("💾 Enregistrer les données du projet"):
-    data = {
-        "projet": nom_projet,
-        "beton": beton,
-        "acier": acier,
-        "geometrie": {"b": b, "h": h, "enrobage": enrobage},
-        "moments": moments,
-    }
-    with open(f"{nom_projet}.json", "w") as f:
-        json.dump(data, f, indent=4)
-    st.success(f"Projet enregistré sous {nom_projet}.json")
-
-# --- Export PDF ---
+# --- PDF téléchargeable ---
 pdf_data = generer_pdf(nom_projet, moments, {"b": b, "h": h, "enrobage": enrobage}, beton, acier, resultats)
 st.download_button("📄 Télécharger la note de calcul (PDF)", data=pdf_data, file_name=f"{nom_projet}.pdf")
