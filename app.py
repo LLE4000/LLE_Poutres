@@ -68,8 +68,8 @@ def generer_pdf(projet, moments, geometrie, beton, acier, resultats):
         d, As = resultats[i]
         titre = m["nom"]
         pdf.cell(200, 10, txt=f"{titre} – M = {m['moment']} kNm", ln=True)
-        pdf.cell(200, 10, txt=f"d = sqrt(M·10^6 / (μ·σ·b)) = {d:.1f} mm", ln=True)
-        pdf.cell(200, 10, txt=f"As = M·10^6 / (fyd·0.9·d) = {As:.1f} mm²", ln=True)
+        pdf.cell(200, 10, txt=f"d = sqrt(M * 10^6 / (mu * sigma * b)) = {d:.1f} mm", ln=True)
+        pdf.cell(200, 10, txt=f"As = M * 10^6 / (fyd * 0.9 * d) = {As:.1f} mm²", ln=True)
 
     return pdf.output(dest='S').encode('latin1')
 
