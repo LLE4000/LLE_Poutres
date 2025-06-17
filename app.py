@@ -31,7 +31,14 @@ st.title("🧱 Dimensionnement d'une poutre en béton armé")
 st.markdown("---")
 
 # Section 1 : Info projet
-st.subheader("1. Informations sur le projet")
+with st.container():
+    st.markdown("### 🧾 Informations sur le projet")
+    col1, col2 = st.columns([3, 1])
+    projet = col1.text_input("", placeholder="Nom du projet")
+    partie = col1.text_input("", placeholder="Partie (ex: Poutres RDC)")
+    date_str = col1.text_input("", value=datetime.today().strftime("%d/%m/%Y"), placeholder="Date (jj/mm/aaaa)")
+    indice = col2.number_input("", value=0, label_visibility="collapsed")
+
 col1, col2 = st.columns([3, 1])
 projet = col1.text_input("Nom du projet", placeholder="ex: Bâtiment RTDF")
 partie = col1.text_input("Partie", placeholder="ex: Poutres RDC")
@@ -39,7 +46,15 @@ date_str = col1.text_input("Date (jj/mm/aaaa)", value=datetime.today().strftime(
 indice = col2.number_input("Indice", value=0)
 
 # Section 2 : Caractéristiques poutre
-st.subheader("2. Caractéristiques de la poutre")
+with st.container():
+    st.markdown("### 🧱 Caractéristiques de la poutre")
+    col1, col2 = st.columns(2)
+    b_cm = col1.number_input("Largeur (cm)", value=60)
+    h_cm = col1.number_input("Hauteur (cm)", value=70)
+    enrobage = col1.number_input("Enrobage (cm)", value=3)
+    beton = col2.selectbox("Qualité béton", list(beton_dict.keys()), index=2)
+    acier = col2.selectbox("Qualité acier", acier_list, index=0)
+
 col1, col2 = st.columns(2)
 b_cm = col1.number_input("Largeur (cm)", value=60)
 h_cm = col1.number_input("Hauteur (cm)", value=70)
@@ -55,7 +70,16 @@ fyk = int(acier)
 fyd = fyk / 1.5
 
 # Section 3 : Sollicitations
-st.subheader("3. Sollicitations")
+with st.container():
+    st.markdown("### ⚙️ Sollicitations")
+    M = st.number_input("Moment inférieur M (kNm)", value=0.0)
+    V = st.number_input("Effort tranchant V (kN)", value=0.0)
+    colM, colV = st.columns(2)
+    M_sup_active = colM.checkbox("Ajouter un moment supérieur ?")
+    M_sup = colM.number_input("Moment supérieur M_sup (kNm)", value=0.0) if M_sup_active else None
+    V_red_active = colV.checkbox("Ajouter un effort tranchant réduit ?")
+    V_limite = colV.number_input("Effort tranchant limité V_red (kN)", value=0.0) if V_red_active else None
+
 M = st.number_input("Moment inférieur M (kNm)", value=0.0)
 V = st.number_input("Effort tranchant V (kN)", value=0.0)
 
@@ -127,7 +151,10 @@ if M > 0:
         st.write(f"τ (réduit) = {tau_r:.2f} N/mm²")
 
     # PDF Button
-else:
-    st.info("💡 Entrez un moment pour lancer le dimensionnement automatique.")
-if st.button("📄 Générer la note de calcul PDF"):
+colA, colB = st.columns(2)
+if colA.button("📄 Générer la note de calcul PDF"):
+    pass  # PDF à insérer ici
+if colB.button("🔄 Réinitialiser les données"):
+    st.experimental_rerun()
+
     st.warning("📄 La version PDF sera ajoutée dans la prochaine étape.")
