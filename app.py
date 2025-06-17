@@ -32,12 +32,13 @@ st.markdown("---")
 
 # Section 1 : Info projet
 with st.container():
-    st.markdown("### 🧾 Informations sur le projet")
+    st.markdown("### Informations sur le projet")
     col1, col2 = st.columns([3, 1])
     projet = col1.text_input("", placeholder="Nom du projet")
     partie = col1.text_input("", placeholder="Partie (ex: Poutres RDC)")
-    date_str = col1.text_input("", value=datetime.today().strftime("%d/%m/%Y"), placeholder="Date (jj/mm/aaaa)")
-    indice = col2.number_input("", value=0, label_visibility="collapsed")
+    col3, col4 = st.columns([3, 1])
+    date_str = col3.text_input("Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"))
+    indice = col4.number_input("Indice", value=0)
 
 col1, col2 = st.columns([3, 1])
 projet = col1.text_input("Nom du projet", placeholder="ex: Bâtiment RTDF")
