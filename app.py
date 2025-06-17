@@ -4,13 +4,13 @@ from datetime import datetime
 
 st.set_page_config(page_title="Dimensionnement Poutre BA", layout="centered")
 
-st.title("🧱 Dimensionnement d'une poutre en béton armé")
+st.markdown("<h1 style='text-align: center;'>Dimensionnement d'une poutre en béton armé</h1>", unsafe_allow_html=True)
 
 # Réinitialisation
 if st.button("🔄 Réinitialiser les données"):
     st.experimental_rerun()
 
-# Informations sur le projet
+# 1. Informations sur le projet
 with st.container():
     st.markdown("### Informations sur le projet")
     nom_projet = st.text_input(label="", placeholder="Nom du projet", key="nom_projet")
@@ -21,7 +21,7 @@ with st.container():
     with col2:
         indice = st.text_input(label="", placeholder="Indice", value="0", key="indice")
 
-# Caractéristiques de la poutre
+# 2. Caractéristiques de la poutre
 with st.container():
     st.markdown("### Caractéristiques de la poutre")
     col1, col2, col3 = st.columns(3)
@@ -34,11 +34,11 @@ with st.container():
 
     col4, col5 = st.columns(2)
     with col4:
-        qualite_beton = st.selectbox("Qualité béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2, key="beton")
+        qualite_beton = st.selectbox("Classe de béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2, key="beton")
     with col5:
         qualite_acier = st.selectbox("Qualité acier (fyk)", ["400", "500", "600"], index=1, key="acier")
 
-# Sollicitations
+# 3. Sollicitations
 with st.container():
     st.markdown("### Sollicitations")
     col1, col2 = st.columns(2)
@@ -47,14 +47,16 @@ with st.container():
     with col2:
         V = st.number_input("Effort tranchant V (kN)", min_value=0.0, step=10.0, value=0.0, key="tranchant")
 
-    st.checkbox("Ajouter un moment supplémentaire", key="moment_sup")
-    st.checkbox("Ajouter un effort tranchant réduit", key="tranchant_sup")
+    moment_sup = st.checkbox("Ajouter un moment supplémentaire")
+    tranchant_sup = st.checkbox("Ajouter un effort tranchant réduit")
 
-# Dimensionnement
+# Placeholder pour section 4: à compléter avec calculs
 with st.container():
     st.markdown("### Dimensionnement")
-    st.markdown("- Hauteur utile `d = h - enrobage`")
+    st.markdown("**4.1 Hauteur utile** : d = h - enrobage")
     if M > 0 and V > 0:
-        st.success("🧮 Données prêtes pour le calcul.")
+        st.success("🧮 Calculs disponibles dès que les formules seront implémentées ici.")
     else:
-        st.warning("Veuillez remplir les sollicitations pour lancer le dimensionnement.")
+        st.warning("Remplissez les sollicitations pour afficher les résultats.")
+
+# Note : Calculs, armatures, étriers et vérifs ✔️❌ à ajouter
