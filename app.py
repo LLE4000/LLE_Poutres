@@ -60,7 +60,7 @@ def build_pdf(data):
     write_line("")
 
     write_line("Dimensionnement :", bold=True)
-        d_formula = render_formula(r"d = \sqrt{\frac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
+d_formula = render_formula(r"d = \sqrt{\frac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
 write_line("Hauteur utile :")
     rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
