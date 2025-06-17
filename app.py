@@ -1,25 +1,3 @@
-beton_dict = {
-    "C20/25": {
-        "mu": 0.1363,
-        "sigma": 12.96
-    },
-    "C25/30": {
-        "mu": 0.1513,
-        "sigma": 12.96
-    },
-    "C30/37": {
-        "mu": 0.1708,
-        "sigma": 12.96
-    },
-    "C35/45": {
-        "mu": 0.1904,
-        "sigma": 12.96
-    },
-    "C40/50": {
-        "mu": 0.206,
-        "sigma": 12.96
-    }
-}
 
 import streamlit as st
 import math
@@ -28,6 +6,14 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 import io
 from datetime import datetime
+
+beton_dict = {
+    "C20/25": {"mu": 0.1363, "sigma": 12.96},
+    "C25/30": {"mu": 0.1513, "sigma": 12.96},
+    "C30/37": {"mu": 0.1708, "sigma": 12.96},
+    "C35/45": {"mu": 0.1904, "sigma": 12.96},
+    "C40/50": {"mu": 0.2060, "sigma": 12.96},
+}
 
 def calc_As(M, fyd, d):
     return (M * 1e6) / (fyd * 0.9 * d)
@@ -51,7 +37,6 @@ def create_pdf(data):
         c.setFont("Helvetica-Bold" if bold else "Helvetica", size)
         c.drawString(25 * mm, y * mm, txt)
         y -= offset
-
 
     write("Note de calcul – Poutre BA", bold=True, size=14, offset=8)
     write(f"Projet : {data['projet']} – Partie : {data['partie']} – Indice {data['indice']} – Date : {data['date']}")
@@ -78,6 +63,16 @@ def create_pdf(data):
     write("")
     write("Effort tranchant :", bold=True)
     write(f"τ = {data['tau']:.2f} N/mm² < {data['tau_adm']} N/mm²    OK")
+    c.save()
+    buf.seek(0)
+    return buf
+
+st.set_page_config("Note de calcul BA", layout="wide")
+st.markdown("<style>body { background-color: #f7f7f2; }</style>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#aa0000;'>Note de calcul - Poutre BA</h1>", unsafe_allow_html=True)
+
+with st.form("formulaire"):
+    st.subheader("🔧 Informations générales")
     col1, col2 = st.columns([3, 1])
     projet = col1.text_input("Nom du projet", value="Ma poutre")
     partie = col1.text_input("Partie", value="Poutres RDC")
@@ -102,10 +97,8 @@ def create_pdf(data):
     col3, col4 = st.columns(2)
     M = col3.number_input("Moment inférieur M (kNm)", value=367.79)
     V = col3.number_input("Effort tranchant V (kN)", value=171.01)
-
-    with col4:
-        M_sup = st.number_input("Moment supérieur (optionnel)", value=0.0)
-        V_limite = st.number_input("Effort tranchant limité (optionnel)", value=0.0)
+    M_sup = col4.number_input("Moment supérieur (optionnel)", value=0.0)
+    V_limite = col4.number_input("Effort tranchant limité (optionnel)", value=0.0)
 
     st.subheader("🧱 Armatures choisies")
     As_min = 633
@@ -116,27 +109,27 @@ def create_pdf(data):
     col_bouton = st.columns([1, 1])
     submitted = col_bouton[0].form_submit_button("🧾 Générer le PDF")
     reset = col_bouton[1].form_submit_button("🔄 Réinitialiser")
-if submitted:
-    Mmax = max(abs(M), abs(M_sup)) if M_sup else abs(M)
-    d = calc_d(Mmax, mu, sigma, b)
-    As_calc = calc_As(M, fyd, d)
-    As_choisi = calc_section_barres(n_barres, dia)
-    tau = calc_tau(V, b, h)
-    tau_adm = 1.13
 
-    data = {
-        'projet': projet, 'partie': partie, 'indice': indice, 'date': date_str,
-        'b': b, 'h': h, 'enrobage': enrobage,
-        'mu': mu, 'sigma': sigma, 'fyd': fyd,
-        'M': M, 'V': V, 'M_sup': M_sup if M_sup != 0 else None,
-        'V_limite': V_limite if V_limite != 0 else None,
-        'As_min': As_min, 'As_max': As_max,
-        'n_barres': n_barres, 'dia': dia,
-        'd': d, 'As_calc': As_calc, 'As_choisi': As_choisi,
-        'tau': tau, 'tau_adm': tau_adm, 'Mmax': Mmax
-    }
+    if submitted:
+        Mmax = max(abs(M), abs(M_sup)) if M_sup else abs(M)
+        d = calc_d(Mmax, mu, sigma, b)
+        As_calc = calc_As(M, fyd, d)
+        As_choisi = calc_section_barres(n_barres, dia)
+        tau = calc_tau(V, b, h)
+        tau_adm = 1.13
 
-    pdf = create_pdf(data)
-    st.success("✅ PDF généré avec succès")
-    st.download_button("📄 Télécharger le PDF", data=pdf, file_name=f"{projet}_note.pdf")
+        data = {
+            'projet': projet, 'partie': partie, 'indice': indice, 'date': date_str,
+            'b': b, 'h': h, 'enrobage': enrobage,
+            'mu': mu, 'sigma': sigma, 'fyd': fyd,
+            'M': M, 'V': V, 'M_sup': M_sup if M_sup != 0 else None,
+            'V_limite': V_limite if V_limite != 0 else None,
+            'As_min': As_min, 'As_max': As_max,
+            'n_barres': n_barres, 'dia': dia,
+            'd': d, 'As_calc': As_calc, 'As_choisi': As_choisi,
+            'tau': tau, 'tau_adm': tau_adm, 'Mmax': Mmax
+        }
 
+        pdf = create_pdf(data)
+        st.success("✅ PDF généré avec succès")
+        st.download_button("📄 Télécharger le PDF", data=pdf, file_name=f"{projet}_note.pdf")
