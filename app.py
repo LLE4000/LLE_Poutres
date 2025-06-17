@@ -1,3 +1,26 @@
+beton_dict = {
+    "C20/25": {
+        "mu": 0.1363,
+        "sigma": 12.96
+    },
+    "C25/30": {
+        "mu": 0.1513,
+        "sigma": 12.96
+    },
+    "C30/37": {
+        "mu": 0.1708,
+        "sigma": 12.96
+    },
+    "C35/45": {
+        "mu": 0.1904,
+        "sigma": 12.96
+    },
+    "C40/50": {
+        "mu": 0.206,
+        "sigma": 12.96
+    }
+}
+
 import streamlit as st
 import math
 from reportlab.pdfgen import canvas
@@ -30,42 +53,37 @@ def create_pdf(data):
         y -= offset
 
     write("Note de calcul – Poutre BA", bold=True, size=14, offset=8)
-    write(f"Projet : {data['projet']} – Partie : {data['partie']} – Indice {data['indice']} – Date : {data['date']}")
+    write(f"Projet : {{data['projet']}} – Partie : {{data['partie']}} – Indice {{data['indice']}} – Date : {{data['date']}}")
     write("")
-
     write("Dimensions :", bold=True)
-    write(f"largeur : {data['b']/1000:.1f} m")
-    write(f"hauteur : {data['h']/1000:.1f} m")
+    write(f"largeur : {{data['b']/1000:.1f}} m")
+    write(f"hauteur : {{data['h']/1000:.1f}} m")
     write("")
-
     write("Sollicitations :", bold=True)
-    write(f"M_y = {data['M']} kNm       V_y = {data['V']} kN")
-    if data['M_sup'] is not None:
-        write(f"M_sup = {data['M_sup']} kNm")
-    if data['V_limite'] is not None:
-        write(f"V_tranchant limité = {data['V_limite']} kN")
+    write(f"M_y = {{data['M']}} kNm       V_y = {{data['V']}} kN")
+    if data['M_sup']:
+        write(f"M_sup = {{data['M_sup']}} kNm")
+    if data['V_limite']:
+        write(f"V_tranchant limité = {{data['V_limite']}} kN")
     write("")
-
     write("Hauteur utile :", bold=True)
-    write(f"d = √({data['Mmax']}·10⁶ / ({data['mu']}·{data['b']}·{data['sigma']})) = {data['d']:.1f} mm < {data['h'] - data['enrobage']} mm")
+    write(f"d = √({{data['Mmax']}}·10⁶ / ({{data['mu']}}·{{data['b']}}·{{data['sigma']}})) = {{data['d']:.1f}} mm < {{data['h'] - data['enrobage']}} mm")
     write("")
-
     write("Armature principale inférieure – Acier 500B", bold=True)
-    write(f"A_s = {data['M']}·10⁶ / ({data['fyd']:.0f}·0.9·{data['d']:.0f}) = {data['As_calc']:.1f} mm²")
-    write(f"A_s_min = {data['As_min']} mm²        ok")
-    write(f"A_s_max = {data['As_max']} mm²        ok")
-    write(f"A_s choisi = {data['n_barres']} Ø {data['dia']} = {data['As_choisi']:.1f} mm²    > {data['As_calc']:.1f} mm²    ok")
+    write(f"A_s = {{data['M']}}·10⁶ / ({{data['fyd']:.0f}}·0.9·{{data['d']:.0f}}) = {{data['As_calc']:.1f}} mm²")
+    write(f"A_s_min = {{data['As_min']}} mm²        ok")
+    write(f"A_s_max = {{data['As_max']}} mm²        ok")
+    write(f"A_s choisi = {{data['n_barres']}} Ø {{data['dia']}} = {{data['As_choisi']:.1f}} mm²    > {{data['As_calc']:.1f}} mm²    ok")
     write("")
-
     write("Effort tranchant :", bold=True)
-    write(f"τ = {data['tau']:.2f} N/mm² < {data['tau_adm']} N/mm²    OK")
-
+    write(f"τ = {{data['tau']:.2f}} N/mm² < {{data['tau_adm']}} N/mm²    OK")
     c.save()
     buf.seek(0)
     return buf
 
 st.set_page_config("Note de calcul BA", layout="wide")
-st.markdown("<h1 style='color:red;'>Note de calcul - Poutre en béton armé</h1>", unsafe_allow_html=True)
+st.markdown("<style>body { background-color: #f7f7f2; }</style>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#aa0000;'>Note de calcul - Poutre BA</h1>", unsafe_allow_html=True)
 
 with st.form("formulaire"):
     st.subheader("🔧 Informations générales")
@@ -80,8 +98,10 @@ with st.form("formulaire"):
     b = colb1.number_input("Largeur (mm)", value=600)
     h = colb1.number_input("Hauteur (mm)", value=700)
     enrobage = colb1.number_input("Enrobage (mm)", value=30)
-    mu = colb2.number_input("μ (qualité béton)", value=0.1708)
-    sigma = colb2.number_input("σ (béton)", value=12.96)
+
+    beton_choisi = colb2.selectbox("Qualité béton", list(beton_dict.keys()), index=2)
+    mu = beton_dict[beton_choisi]["mu"]
+    sigma = beton_dict[beton_choisi]["sigma"]
 
     st.subheader("🔩 Qualité d'acier")
     fyk = colb2.number_input("fyk acier (MPa)", value=500)
@@ -102,7 +122,9 @@ with st.form("formulaire"):
     n_barres = st.number_input("Nombre de barres", value=7)
     dia = st.number_input("Diamètre (mm)", value=20)
 
-    submitted = st.form_submit_button("🧾 Générer le PDF")
+    col_bouton = st.columns([1, 1])
+    submitted = col_bouton[0].form_submit_button("🧾 Générer le PDF")
+    reset = col_bouton[1].form_submit_button("🔄 Réinitialiser")
 
 if submitted:
     Mmax = max(abs(M), abs(M_sup)) if M_sup else abs(M)
