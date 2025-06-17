@@ -83,6 +83,8 @@ As_max = 16800
 
 # Choix armatures commerciales
 if M > 0:
+    As_min = 633
+    As_max = 16800
     st.subheader("4. Dimensionnement")
     st.markdown("#### 4.1 Hauteur utile")
     st.write(f"Hauteur utile d = {d_calc:.1f} mm")
