@@ -1,134 +1,140 @@
-
 import streamlit as st
-import math, io, os, tempfile
-from datetime import datetime
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import mm
-from PIL import Image
+import math
 import matplotlib.pyplot as plt
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
+from datetime import datetime
+import tempfile
+import io
+from PIL import Image
 
-# ----------------- Données béton / acier -----------------
-beton_coeffs = {
-    "C20/25": {"mu": 0.1363, "sigma": 12.96, "fctm": 2.2},
-    "C25/30": {"mu": 0.1513, "sigma": 12.96, "fctm": 2.6},
-    "C30/37": {"mu": 0.1709, "sigma": 12.96, "fctm": 2.9},
-    "C35/45": {"mu": 0.1868, "sigma": 12.96, "fctm": 3.2},
-}
-acier_fyk = {"BE 500": 500, "BE 400": 400}
-
-# ----------------- Fonctions utilitaires -----------------
-def latex_to_png(latex, fontsize=20):
-    fig, ax = plt.subplots(figsize=(0.01, 0.01))
+# Formule LaTeX -> image PNG
+def render_formula(latex_code):
+    fig, ax = plt.subplots(figsize=(4, 0.5))
+    ax.text(0.5, 0.5, f"${latex_code}$", ha="center", va="center", fontsize=18)
     ax.axis("off")
-    ax.text(0.5, 0.5, f"${latex}$", fontsize=fontsize, ha="center", va="center")
     buf = io.BytesIO()
     plt.savefig(buf, format="png", dpi=300, bbox_inches="tight", transparent=True)
     plt.close(fig)
     buf.seek(0)
     return Image.open(buf)
 
-def calc_section_barres(n, d):
-    return n * (math.pi * d ** 2 / 4)
+def calcul_hauteur_utile(M_max, mu, sigma, b):
+    return math.sqrt((M_max * 1e6) / (mu * sigma * b))
+
+def calcul_As(M, fyd, d):
+    return (M * 1e6) / (fyd * 0.9 * d)
+
+def calcul_tau(V, b, h):
+    return V * 1e3 / (0.75 * b * h)
+
+def calc_section_barres(n, dia):
+    return n * (math.pi * dia ** 2 / 4)
 
 def build_pdf(data):
-    tmp = io.BytesIO()
-    c = canvas.Canvas(tmp, pagesize=A4)
-    y = 285  # mm from bottom
-    def title(txt): 
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    y = 280
+
+    def write_line(text, offset=6, bold=False):
         nonlocal y
-        c.setFont("Helvetica-Bold", 14); c.drawString(20*mm, y*mm, txt); y -= 8
-    def text(txt, size=11): 
-        nonlocal y
-        c.setFont("Helvetica", size); c.drawString(25*mm, y*mm, txt); y -= 6
+        c.setFont("Helvetica-Bold" if bold else "Helvetica", 11)
+        c.drawString(25 * mm, y * mm, text)
+        y -= offset
 
-    title(f"Note de calcul – Poutre béton armé ({data['proj']})")
-    text(f"Date : {data['date']}")
-    y -= 4
+    write_line("Note de calcul – Poutre BA", bold=True)
+    write_line(f"Projet : {data['projet']} - Date : {data['date']}")
+    write_line("")
 
-    # 1. Données
-    title("1. Données générales")
-    text(f"Béton : {data['beton']}   |   Acier : {data['acier']}")
-    text(f"Dimensions : b = {data['b']} mm   h = {data['h']} mm   enrobage = {data['enrobage']} mm")
-    text(f"Hauteur utile limite : d_max = {data['dmax']:.1f} mm")
-    y -= 4
+    write_line("Dimensions :", bold=True)
+    write_line(f"Largeur : {data['b']/1000:.2f} m   Hauteur : {data['h']/1000:.2f} m")
+    write_line("")
 
-    # 2. Moments
-    sec_num = 2
-    for m, res in zip(data['moments'], data['results']):
-        title(f"{sec_num}. {m['nom']}"); sec_num +=1
-        text(f"Moment M = {m['moment']} kNm")
-        # Formule d
-        img_d = latex_to_png(r"d = \sqrt{\dfrac{M\cdot10^{6}}{\mu\,\sigma\,b}}", 18)
-        img_As = latex_to_png(r"A_s = \dfrac{M\cdot10^{6}}{f_{yd}\cdot0.9\,d}", 18)
+    write_line("Sollicitations :", bold=True)
+    write_line(f"M inf = {data['M_inf']} kNm   V = {data['V']} kN")
+    if data['M_sup'] is not None:
+        write_line(f"M sup = {data['M_sup']} kNm")
+    if data['V_limite'] is not None:
+        write_line(f"V limite = {data['V_limite']} kN")
+    write_line("")
 
-        # place images
-        w, h_img = img_d.size
-        img_path_d = tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
-        img_d.save(img_path_d); 
-        c.drawImage(img_path_d, 30*mm, (y-20)*mm, width=120*mm, preserveAspectRatio=True, mask='auto')
-        y -= 25
-        text(f"d calculé = {res['d']:.1f} mm")
-        # formule As
-        img_path_As = tempfile.NamedTemporaryFile(delete=False, suffix='.png').name
-        img_As.save(img_path_As)
-        c.drawImage(img_path_As, 30*mm, (y-20)*mm, width=120*mm, preserveAspectRatio=True, mask='auto')
-        y -= 25
-        text(f"A_s calculé = {res['As']:.1f} mm2")
-        # limites
-        text(f"A_s,min = {data['Asmin']:.1f} mm2")
-        text(f"A_s,max = {data['Asmax']:.1f} mm2")
-        text(f"A_s choisi = {data['barres_txt']}  →  {data['Aschoisi']:.1f} mm2")
-        y -= 6
+    write_line("Dimensionnement :", bold=True)
+    write_line("Hauteur utile :")
+    d_formula = render_formula(r"d = \sqrt{rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    d_formula.save(tmp.name)
+    c.drawImage(tmp.name, 30 * mm, (y - 20) * mm, width=140 * mm, preserveAspectRatio=True, mask='auto')
+    y -= 30
+    write_line(f"d = {data['d']:.1f} mm  <  {data['h'] - data['enrobage']} mm")
+    write_line("")
+
+    write_line("Armatures principales inférieures :", bold=True)
+    As_formula = render_formula(r"A_s = rac{M \cdot 10^6}{f_{yd} \cdot 0.9 \cdot d}")
+    tmp2 = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    As_formula.save(tmp2.name)
+    c.drawImage(tmp2.name, 30 * mm, (y - 20) * mm, width=140 * mm, preserveAspectRatio=True, mask='auto')
+    y -= 30
+    write_line(f"A_s = {data['As_inf']:.1f} mm²")
+    write_line(f"A_s choisi = {data['n_barres']}Ø{data['dia_barres']} → {data['As_choisi']:.1f} mm²")
+    write_line("")
+
+    if data['M_sup'] is not None:
+        write_line("Armatures supérieures :", bold=True)
+        write_line(f"A_s sup = {data['As_sup']:.1f} mm²")
+        write_line("")
+
+    write_line("Effort tranchant :", bold=True)
+    write_line("Formule : τ = V / (0.75 · b · h)")
+    write_line(f"τ = {data['tau']:.2f} N/mm²")
+    write_line(f"τ admis = {data['tau_adm']:.2f} N/mm²")
+    if data['tau'] <= data['tau_adm']:
+        write_line("→ OK")
+    else:
+        write_line("→ NON conforme")
 
     c.save()
-    tmp.seek(0)
-    return tmp.read()
+    buffer.seek(0)
+    return buffer.read()
 
-# ----------------- Interface Streamlit -----------------
-st.set_page_config(page_title="Calcul armatures – Procédé 30.37", layout="centered")
-st.title("Calcul d'armatures – Procédé 30.37")
+st.set_page_config("Note de calcul poutre BA")
+st.title("Calcul de poutre BA – Note de calcul PDF")
 
-proj = st.text_input("Nom du projet", "Projet BA")
-beton = st.selectbox("Classe de béton", list(beton_coeffs.keys()))
-acier = st.selectbox("Type d'acier", list(acier_fyk.keys()))
-col1,col2,col3 = st.columns(3)
-with col1: b = st.number_input("Largeur b (mm)", 300)
-with col2: h = st.number_input("Hauteur h (mm)", 500)
-with col3: enrob = st.number_input("Enrobage (mm)", 30)
+projet = st.text_input("Nom du projet", "Ma Poutre")
+b = st.number_input("Largeur (mm)", value=300)
+h = st.number_input("Hauteur (mm)", value=500)
+enrobage = st.number_input("Enrobage (mm)", value=30)
+mu = st.number_input("μ (selon béton)", value=0.1709)
+sigma = st.number_input("σ (selon béton)", value=12.96)
+fyk = st.number_input("fyk acier (MPa)", value=500)
+fyd = fyk / 1.5
 
-multi = st.checkbox("Moment supérieur + inférieur")
-moments=[]
-if multi:
-    Msup = st.number_input("Moment supérieur (kNm)", 90.0); Minf = st.number_input("Moment inférieur (kNm)", 120.0)
-    moments=[{"nom":"Moment supérieur","moment":abs(Msup)},{"nom":"Moment inférieur","moment":abs(Minf)}]
-else:
-    M = st.number_input("Moment (kNm)", 120.0); moments=[{"nom":"Moment","moment":abs(M)}]
+M_inf = st.number_input("Moment inf à l'ELS (kNm)", value=120.0)
+V = st.number_input("Effort tranchant V (kN)", value=160.0)
+opt_M_sup = st.checkbox("Ajouter un moment supérieur ?")
+M_sup = st.number_input("Moment sup à l'ELS (kNm)", value=90.0) if opt_M_sup else None
+opt_V_lim = st.checkbox("Limiter effort tranchant ?")
+V_lim = st.number_input("Effort tranchant limité (kN)", value=90.0) if opt_V_lim else None
 
-st.markdown("### Choix des armatures")
-nb = st.number_input("Nombre de barres",1, value=5); dia = st.number_input("Diamètre (mm)",6, value=8)
-Aschoisi = calc_section_barres(nb,dia); barres_txt=f"{nb}Ø{dia}"
+n_barres = st.number_input("Nombre de barres inférieures", value=7)
+dia_barres = st.number_input("Diamètre barres (mm)", value=20)
+As_choisi = calc_section_barres(n_barres, dia_barres)
 
-# ----- calculs principaux -----
-coeff = beton_coeffs[beton]; mu, sigma, fctm = coeff['mu'], coeff['sigma'], coeff['fctm']
-fyk = acier_fyk[acier]; fyd = fyk/1.5
-dmax = h - enrob
-Asmin = 0.26 * fctm / fyk * b * dmax
-Asmax = 0.04 * b * h
+Mmax = max(abs(M_inf), abs(M_sup) if M_sup else 0)
+d = calcul_hauteur_utile(Mmax, mu, sigma, b)
+As_inf = calcul_As(M_inf, fyd, d)
+As_sup = calcul_As(M_sup, fyd, d) if M_sup else None
+tau = calcul_tau(V, b, h)
+tau_adm = 1.13  # par défaut
 
-results=[]
-for m in moments:
-    d = math.sqrt((m['moment']*1e6)/(mu*sigma*b)); d=min(d,dmax)
-    As = (m['moment']*1e6)/(fyd*0.9*d)
-    results.append({'d':d,'As':As})
-
-# ----- Génération PDF -----
-data_pdf = {
-    'proj': proj, 'date': datetime.today().strftime("%d/%m/%Y"), 'beton': beton, 'acier': acier,
-    'b': b, 'h': h, 'enrobage': enrob, 'dmax': dmax,
-    'moments': moments, 'results': results,
-    'Asmin': Asmin, 'Asmax': Asmax,
-    'barres_txt': barres_txt, 'Aschoisi': Aschoisi
+data = {
+    'projet': projet, 'date': datetime.today().strftime("%d/%m/%Y"),
+    'b': b, 'h': h, 'enrobage': enrobage,
+    'M_inf': M_inf, 'M_sup': M_sup, 'V': V, 'V_limite': V_lim,
+    'd': d, 'As_inf': As_inf, 'As_sup': As_sup,
+    'n_barres': n_barres, 'dia_barres': dia_barres, 'As_choisi': As_choisi,
+    'tau': tau, 'tau_adm': tau_adm
 }
-pdf_bytes = build_pdf(data_pdf)
-st.download_button("📄 Télécharger la note de calcul (PDF)", data=pdf_bytes, file_name=f"{proj}.pdf")
+
+pdf_bytes = build_pdf(data)
+st.download_button("📄 Télécharger la note de calcul", data=pdf_bytes, file_name=f"{projet}.pdf")
