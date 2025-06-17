@@ -72,52 +72,60 @@ d_calc = calc_d(max(abs(M), abs(M_sup or 0)), mu, sigma, b)
 d_max = h - enrobage * 10
 check_d = d_calc <= d_max
 
-As_req = calc_As(M, fyd, d_calc)
+if M == 0 or fyd == 0 or d_calc == 0:
+    As_req = 0
+    verif_As = False
+else:
+    As_req = calc_As(M, fyd, d_calc)
+    verif_As = As_min <= As_choisi <= As_max and As_choisi >= As_req
 As_min = 633
 As_max = 16800
 
 # Choix armatures commerciales
-st.subheader("4. Dimensionnement")
-st.markdown("#### 4.1 Hauteur utile")
-st.write(f"Hauteur utile d = {d_calc:.1f} mm")
-st.write(f"Hauteur max admissible = {d_max} mm {'✅' if check_d else '❌'}")
+if M > 0:
+    st.subheader("4. Dimensionnement")
+    st.markdown("#### 4.1 Hauteur utile")
+    st.write(f"Hauteur utile d = {d_calc:.1f} mm")
+    st.write(f"Hauteur max admissible = {d_max} mm {'✅' if check_d else '❌'}")
 
-st.markdown("#### 4.2 Vérification des armatures principales")
-n_barres = st.selectbox("Nombre de barres", [2, 3, 4, 5, 6, 7, 8])
-diametre = st.selectbox("Diamètre (mm)", [8, 10, 12, 14, 16, 20, 25, 32])
-As_choisi = section_armature(n_barres, diametre)
+    st.markdown("#### 4.2 Vérification des armatures principales")
+    n_barres = st.selectbox("Nombre de barres", [2, 3, 4, 5, 6, 7, 8])
+    diametre = st.selectbox("Diamètre (mm)", [8, 10, 12, 14, 16, 20, 25, 32])
+    As_choisi = section_armature(n_barres, diametre)
 
-verif_As = As_min <= As_choisi <= As_max and As_choisi >= As_req
+    verif_As = As_min <= As_choisi <= As_max and As_choisi >= As_req
 
-st.write(f"Aₛ requis : {As_req:.1f} mm²")
-st.write(f"Aₛ choisi : {n_barres}Ø{diametre} = {As_choisi:.1f} mm² {'✅' if verif_As else '❌'}")
-st.write(f"Aₛ min = {As_min} mm²  / Aₛ max = {As_max} mm²")
+    st.write(f"Aₛ requis : {As_req:.1f} mm²")
+    st.write(f"Aₛ choisi : {n_barres}Ø{diametre} = {As_choisi:.1f} mm² {'✅' if verif_As else '❌'}")
+    st.write(f"Aₛ min = {As_min} mm²  / Aₛ max = {As_max} mm²")
 
-if M_sup_active:
-    As_sup = calc_As(M_sup, fyd, d_calc)
-    st.write(f"Armature supérieure : Aₛ_sup = {As_sup:.1f} mm²")
+    if M_sup_active:
+        As_sup = calc_As(M_sup, fyd, d_calc)
+        st.write(f"Armature supérieure : Aₛ_sup = {As_sup:.1f} mm²")
 
-st.markdown("#### 4.3 Vérification des efforts tranchants")
-tau = calc_tau(V, b, h)
-verif_tau = tau <= tau_adm
-st.write(f"τ = {tau:.2f} N/mm²  (τ_adm = {tau_adm} N/mm²) → {'✅' if verif_tau else '❌'}")
+    st.markdown("#### 4.3 Vérification des efforts tranchants")
+    tau = calc_tau(V, b, h)
+    verif_tau = tau <= tau_adm
+    st.write(f"τ = {tau:.2f} N/mm²  (τ_adm = {tau_adm} N/mm²) → {'✅' if verif_tau else '❌'}")
 
-# Vérification des étriers
-st.markdown("##### Étriers")
-n_etriers = st.selectbox("Nombre de brins d’étrier", [1, 2])
-dia_etrier = st.selectbox("Diamètre étrier (mm)", [6, 8, 10])
-pas_th = calc_pas(V, n_etriers, dia_etrier, fyd)
-pas_sugg = int((pas_th // 50 + 1) * 50)
-pas_choisi = st.number_input("Pas choisi (mm)", value=pas_sugg)
+    # Vérification des étriers
+    st.markdown("##### Étriers")
+    n_etriers = st.selectbox("Nombre de brins d’étrier", [1, 2])
+    dia_etrier = st.selectbox("Diamètre étrier (mm)", [6, 8, 10])
+    pas_th = calc_pas(V, n_etriers, dia_etrier, fyd)
+    pas_sugg = int((pas_th // 50 + 1) * 50)
+    pas_choisi = st.number_input("Pas choisi (mm)", value=pas_sugg)
 
-verif_pas = pas_choisi <= pas_th
-st.write(f"Pas théorique = {pas_th:.0f} mm → Suggestion : {pas_sugg} mm")
-st.write(f"Pas choisi : {pas_choisi} mm → {'✅' if verif_pas else '❌'}")
+    verif_pas = pas_choisi <= pas_th
+    st.write(f"Pas théorique = {pas_th:.0f} mm → Suggestion : {pas_sugg} mm")
+    st.write(f"Pas choisi : {pas_choisi} mm → {'✅' if verif_pas else '❌'}")
 
-if V_red_active:
-    tau_r = calc_tau(V_limite, b, h)
-    st.write(f"τ (réduit) = {tau_r:.2f} N/mm²")
+    if V_red_active:
+        tau_r = calc_tau(V_limite, b, h)
+        st.write(f"τ (réduit) = {tau_r:.2f} N/mm²")
 
-# PDF Button
+    # PDF Button
+else:
+    st.info("💡 Entrez un moment pour lancer le dimensionnement automatique.")
 if st.button("📄 Générer la note de calcul PDF"):
     st.warning("📄 La version PDF sera ajoutée dans la prochaine étape.")
