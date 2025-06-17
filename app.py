@@ -116,7 +116,6 @@ def create_pdf(data):
     col_bouton = st.columns([1, 1])
     submitted = col_bouton[0].form_submit_button("🧾 Générer le PDF")
     reset = col_bouton[1].form_submit_button("🔄 Réinitialiser")
-
 if submitted:
     Mmax = max(abs(M), abs(M_sup)) if M_sup else abs(M)
     d = calc_d(Mmax, mu, sigma, b)
@@ -140,3 +139,4 @@ if submitted:
     pdf = create_pdf(data)
     st.success("✅ PDF généré avec succès")
     st.download_button("📄 Télécharger le PDF", data=pdf, file_name=f"{projet}_note.pdf")
+
