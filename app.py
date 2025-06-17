@@ -9,7 +9,6 @@ import tempfile
 import io
 from PIL import Image
 
-# Formule LaTeX -> image PNG
 def render_formula(latex_code):
     fig, ax = plt.subplots(figsize=(4, 0.5))
     ax.text(0.5, 0.5, f"${latex_code}$", ha="center", va="center", fontsize=18)
@@ -60,9 +59,8 @@ def build_pdf(data):
     write_line("")
 
     write_line("Dimensionnement :", bold=True)
-d_formula = render_formula(r"d = \sqrt{\frac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
-write_line("Hauteur utile :")
-    rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
+    write_line("Hauteur utile :")
+    d_formula = render_formula(r"d = \sqrt{rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     d_formula.save(tmp.name)
     c.drawImage(tmp.name, 30 * mm, (y - 20) * mm, width=140 * mm, preserveAspectRatio=True, mask='auto')
