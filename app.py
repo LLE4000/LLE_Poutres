@@ -1,41 +1,60 @@
 
 import streamlit as st
-import math
 from datetime import datetime
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
-import io
 
-st.set_page_config("Dimensionnement Poutre BA", layout="centered")
+st.set_page_config(page_title="Dimensionnement Poutre BA", layout="centered")
 
-# --- Base de données béton et acier
-beton_dict = {
-    "C20/25": {"mu": 0.1363, "sigma": 12.96, "tau_adm": 0.75},
-    "C25/30": {"mu": 0.1513, "sigma": 12.96, "tau_adm": 0.95},
-    "C30/37": {"mu": 0.1708, "sigma": 12.96, "tau_adm": 1.13},
-    "C35/45": {"mu": 0.1904, "sigma": 12.96, "tau_adm": 1.30},
-    "C40/50": {"mu": 0.2060, "sigma": 12.96, "tau_adm": 1.50},
-}
-acier_list = ["500", "400"]
-
-# --- Fonctions de calcul
-def calc_d(M, mu, sigma, b): return math.sqrt((M * 1e6) / (mu * sigma * b))
-def calc_As(M, fyd, d): return (M * 1e6) / (fyd * 0.9 * d)
-def section_armature(n, dia): return n * (math.pi * dia**2 / 4)
-def calc_tau(V, b, h): return (V * 1e3) / (0.75 * b * h)
-def calc_pas(V, n_etriers, dia, fyd): return ((4 * n_etriers * math.pi * dia**2 / 4) * fyd * 1e6 * 0.9) / (V * 1e3)
-
-# --- UI
 st.title("🧱 Dimensionnement d'une poutre en béton armé")
-st.markdown("---")
 
-# Section 1 : Info projet
+# Réinitialisation
+if st.button("🔄 Réinitialiser les données"):
+    st.experimental_rerun()
+
+# Informations sur le projet
 with st.container():
     st.markdown("### Informations sur le projet")
-    col1, col2 = st.columns([3, 1])
-    projet = st.text_input("", placeholder="Nom du projet", key="projet")
-    partie = st.text_input("", placeholder="Partie (ex: Poutres RDC)", key="partie")
-    col3, col4 = st.columns([3, 1])
-    date_str = col3.text_input("", value=datetime.today().strftime("%d/%m/%Y"), placeholder="jj/mm/aaaa", key="date_str")
-    indice = col4.number_input("Indice", value=0, key="indice")
+    nom_projet = st.text_input(label="", placeholder="Nom du projet", key="nom_projet")
+    partie = st.text_input(label="", placeholder="Partie", key="partie")
+    col1, col2 = st.columns(2)
+    with col1:
+        date_str = st.text_input(label="", placeholder="Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"), key="date")
+    with col2:
+        indice = st.text_input(label="", placeholder="Indice", value="0", key="indice")
+
+# Caractéristiques de la poutre
+with st.container():
+    st.markdown("### Caractéristiques de la poutre")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        b_cm = st.number_input("Largeur (cm)", min_value=10, max_value=120, value=40, key="b_cm")
+    with col2:
+        h_cm = st.number_input("Hauteur (cm)", min_value=10, max_value=150, value=70, key="h_cm")
+    with col3:
+        enrobage_cm = st.number_input("Enrobage (cm)", min_value=2, max_value=10, value=3, key="enrobage")
+
+    col4, col5 = st.columns(2)
+    with col4:
+        qualite_beton = st.selectbox("Qualité béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2, key="beton")
+    with col5:
+        qualite_acier = st.selectbox("Qualité acier (fyk)", ["400", "500", "600"], index=1, key="acier")
+
+# Sollicitations
+with st.container():
+    st.markdown("### Sollicitations")
+    col1, col2 = st.columns(2)
+    with col1:
+        M = st.number_input("Moment inférieur M (kNm)", min_value=0.0, step=10.0, value=0.0, key="moment")
+    with col2:
+        V = st.number_input("Effort tranchant V (kN)", min_value=0.0, step=10.0, value=0.0, key="tranchant")
+
+    st.checkbox("Ajouter un moment supplémentaire", key="moment_sup")
+    st.checkbox("Ajouter un effort tranchant réduit", key="tranchant_sup")
+
+# Dimensionnement (bref affichage à titre d’exemple)
+with st.container():
+    st.markdown("### Dimensionnement")
+    st.markdown("- Hauteur utile `d = h - enrobage`")
+    if M > 0 and V > 0:
+        st.success("🧮 Données prêtes pour le calcul.")
+    else:
+        st.warning("Veuillez remplir les sollicitations pour lancer le dimensionnement.")
