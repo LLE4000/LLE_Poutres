@@ -61,7 +61,7 @@ def build_pdf(data):
 
     write_line("Dimensionnement :", bold=True)
     write_line("Hauteur utile :")
-    d_formula = render_formula(r"d = \sqrt{rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
+    d_formula = render_formula(r"d = \sqrt{\frac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     d_formula.save(tmp.name)
     c.drawImage(tmp.name, 30 * mm, (y - 20) * mm, width=140 * mm, preserveAspectRatio=True, mask='auto')
