@@ -35,9 +35,7 @@ with st.container():
     st.markdown("### Informations sur le projet")
     col1, col2 = st.columns([3, 1])
     projet = col1.text_input("", placeholder="Nom du projet")
-    partie = col1.text_input("", placeholder="Partie (ex: Poutres RDC)")
-    col3, col4 = st.columns([3, 1])
-    date_str = col3.text_input("Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"))
+    date_str = col3.text_input("Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y", key="date_str"))
     indice = col4.number_input("Indice", value=0)
 
 col1, col2 = st.columns([3, 1])
