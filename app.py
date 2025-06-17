@@ -50,7 +50,7 @@ with st.container():
     st.checkbox("Ajouter un moment supplémentaire", key="moment_sup")
     st.checkbox("Ajouter un effort tranchant réduit", key="tranchant_sup")
 
-# Dimensionnement (bref affichage à titre d’exemple)
+# Dimensionnement
 with st.container():
     st.markdown("### Dimensionnement")
     st.markdown("- Hauteur utile `d = h - enrobage`")
