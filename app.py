@@ -4,10 +4,10 @@ from datetime import datetime
 
 # --- CONFIG ---
 st.set_page_config(page_title="Dimensionnement Poutre BA", layout="centered")
-st.title("Dimensionnement d'une poutre en béton armé")
+st.title("Poutre en béton armé")
 
 # --- RÉINITIALISATION ---
-if st.button("🔄 Réinitialiser les données"):
+if st.button("🔄 Réinitialiser"):
     st.rerun()
 
 # --- 1. INFOS PROJET ---
