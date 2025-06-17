@@ -10,7 +10,7 @@ import io
 from PIL import Image
 
 def render_formula(latex_code):
-    fig, ax = plt.subplots(figsize=(4, 0.5))
+    fig, ax = plt.subplots(figsize=(4, 0.6))
     ax.text(0.5, 0.5, f"${latex_code}$", ha="center", va="center", fontsize=18)
     ax.axis("off")
     buf = io.BytesIO()
@@ -60,7 +60,7 @@ def build_pdf(data):
 
     write_line("Dimensionnement :", bold=True)
     write_line("Hauteur utile :")
-    d_formula = render_formula(r"d = \sqrt{rac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
+    d_formula = render_formula("d = \sqrt{\frac{M \cdot 10^6}{\mu \cdot \sigma \cdot b}}")
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     d_formula.save(tmp.name)
     c.drawImage(tmp.name, 30 * mm, (y - 20) * mm, width=140 * mm, preserveAspectRatio=True, mask='auto')
@@ -69,7 +69,7 @@ def build_pdf(data):
     write_line("")
 
     write_line("Armatures principales inférieures :", bold=True)
-    As_formula = render_formula(r"A_s = rac{M \cdot 10^6}{f_{yd} \cdot 0.9 \cdot d}")
+    As_formula = render_formula("A_s = \frac{M \cdot 10^6}{f_{yd} \cdot 0.9 \cdot d}")
     tmp2 = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     As_formula.save(tmp2.name)
     c.drawImage(tmp2.name, 30 * mm, (y - 20) * mm, width=140 * mm, preserveAspectRatio=True, mask='auto')
@@ -124,7 +124,7 @@ d = calcul_hauteur_utile(Mmax, mu, sigma, b)
 As_inf = calcul_As(M_inf, fyd, d)
 As_sup = calcul_As(M_sup, fyd, d) if M_sup else None
 tau = calcul_tau(V, b, h)
-tau_adm = 1.13  # par défaut
+tau_adm = 1.13  # valeur par défaut à adapter
 
 data = {
     'projet': projet, 'date': datetime.today().strftime("%d/%m/%Y"),
