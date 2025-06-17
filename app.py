@@ -8,7 +8,7 @@ st.title("Dimensionnement d'une poutre en béton armé")
 
 # --- RÉINITIALISATION ---
 if st.button("🔄 Réinitialiser les données"):
-    st.experimental_rerun()
+    st.rerun()
 
 # --- 1. INFOS PROJET ---
 with st.container():
