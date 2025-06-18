@@ -19,6 +19,10 @@ st.markdown("""
     }
     .fond-blanc {
         background-color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 1.5rem;
     }
     .bloc * {
         color: black !important;
@@ -38,6 +42,7 @@ with col_gauche:
     with st.container():
         st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
 
+        # INFOS PROJET
         st.markdown("### Informations sur le projet")
         nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
         partie = st.text_input("", placeholder="Partie", key="partie")
@@ -85,7 +90,7 @@ with col_gauche:
 # ----------- COLONNE DROITE -----------
 with col_droite:
     with st.container():
-        st.markdown('<div class="bloc fond-blanc">', unsafe_allow_html=True)
+        st.markdown('<div class="fond-blanc">', unsafe_allow_html=True)
 
         st.markdown("### Dimensionnement")
         d = h - enrobage
@@ -104,7 +109,7 @@ with col_droite:
             As_min = 0.0013 * b * h
             As_max = 0.04 * b * h
 
-            st.markdown(f"**Section requise Aₓ = {As_req:.1f} mm²**")
+            st.markdown(f"**Section requise Aₛ = {As_req:.1f} mm²**")
 
             col1, col2, col3 = st.columns([3, 3, 4])
             with col1:
@@ -125,7 +130,7 @@ with col_droite:
         if m_sup and M_sup > 0:
             Mu_sup = M_sup * 1e6
             As_sup = Mu_sup / (fyd * 10 * 0.9 * d)
-            st.markdown(f"**Section Aₓ_sup = {As_sup:.1f} mm²**")
+            st.markdown(f"**Section Aₛ_sup = {As_sup:.1f} mm²**")
             col1, col2, col3 = st.columns([3, 3, 4])
             with col1:
                 n_sup = st.selectbox("Nb barres sup", list(range(1, 8)), key="n_sup")
