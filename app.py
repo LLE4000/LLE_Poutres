@@ -2,58 +2,27 @@ import streamlit as st
 from datetime import datetime
 
 # --- CONFIG ---
-st.set_page_config(page_title="Dimensionnement Poutre BA", layout="wide")
+st.set_page_config(page_title="Dimensionnement Poutre BA", layout="centered")
 st.title("Poutre en béton armé")
-
-# --- STYLES ---
-st.markdown("""
-    <style>
-    .bloc {
-        border: 1px solid #ccc;
-        padding: 1.2rem;
-        border-radius: 10px;
-        margin-bottom: 1.5rem;
-    }
-
-    .fond-bleu {
-        background-color: #e3f2fd;
-    }
-
-    .fond-jaune {
-        background-color: #fff9c4;
-    }
-
-    .bloc * {
-        color: black !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # --- RÉINITIALISATION ---
 if st.button("🔄 Réinitialiser"):
     st.rerun()
 
-# --- COLONNES PRINCIPALES ---
-col_gauche, col_droite = st.columns([2, 3])
-
-# ----------- GAUCHE -----------
-with col_gauche:
-
-    # INFOS PROJET
-    st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
+# --- 1. INFOS PROJET ---
+with st.container():
     st.markdown("### Informations sur le projet")
     nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
-    partie = st.text_input("", placeholder="Partie", key="partie")
+    partie = st.text_input("", placeholder="Partie", key="partie")      
+
     col1, col2 = st.columns(2)
     with col1:
-        date = st.text_input("", placeholder="Date (jj/mm/aaaa)",
-                             value=datetime.today().strftime("%d/%m/%Y"), key="date")
+        date = st.text_input("", placeholder="Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"), key="date")
     with col2:
         indice = st.text_input("", placeholder="Indice", value="0", key="indice")
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    # CARACTÉRISTIQUES
-    st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
+# --- 2. CARACTÉRISTIQUES DE LA POUTRE ---
+with st.container():
     st.markdown("### Caractéristiques de la poutre")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -66,34 +35,34 @@ with col_gauche:
         beton = st.selectbox("Classe de béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2)
     with col5:
         fyk = st.selectbox("Qualité d'acier", ["400", "500", "600"], index=1)
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    # BASE DE DONNÉES
-    fck_dict = {"C20/25": 20, "C25/30": 25, "C30/37": 30, "C35/45": 35, "C40/50": 40}
-    tau_lim_dict = {"C20/25": 0.50, "C25/30": 0.60, "C30/37": 0.70, "C35/45": 0.80, "C40/50": 0.85}
-    fcd = fck_dict[beton] / 1.5
-    fyd = int(fyk) / 1.15
-    tau_lim = tau_lim_dict[beton]
+# --- BASE DE DONNÉES MATÉRIAUX ---
+fck_dict = {"C20/25": 20, "C25/30": 25, "C30/37": 30, "C35/45": 35, "C40/50": 40}
+tau_lim_dict = {"C20/25": 0.50, "C25/30": 0.60, "C30/37": 0.70, "C35/45": 0.80, "C40/50": 0.85}
+fcd = fck_dict[beton] / 1.5
+fyd = int(fyk) / 1.15
+tau_lim = tau_lim_dict[beton]
 
-    # SOLLICITATIONS
-    st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
+# --- 3. SOLLICITATIONS ---
+with st.container():
     st.markdown("### Sollicitations")
     col1, col2 = st.columns(2)
+
     with col1:
         M = st.number_input("Moment inférieur M (kNm)", 0.0, step=10.0)
         m_sup = st.checkbox("Ajouter un moment supérieur")
         if m_sup:
             M_sup = st.number_input("Moment supérieur M_sup (kNm)", 0.0, step=10.0)
+
     with col2:
         V = st.number_input("Effort tranchant V (kN)", 0.0, step=10.0)
         v_sup = st.checkbox("Ajouter un effort tranchant réduit")
         if v_sup:
             V_lim = st.number_input("Effort tranchant réduit V_limite (kN)", 0.0, step=10.0)
-    st.markdown('</div>', unsafe_allow_html=True)
 
-# ----------- DROITE -----------
-with col_droite:
-    st.markdown('<div class="bloc fond-jaune"><h3>Dimensionnement</h3>', unsafe_allow_html=True)
+# --- 4. DIMENSIONNEMENT ---
+with st.container():
+    st.markdown("### Dimensionnement")
 
     d = h - enrobage
     st.markdown(f"**Hauteur utile d = h - enrobage = {h} - {enrobage} = {d:.1f} cm**")
@@ -166,16 +135,18 @@ with col_droite:
             diam_etriers = st.selectbox("Ø étrier (mm)", [6, 8, 10], key="ø_etrier")
 
         area_etrier = n_etriers * 3.14 * (diam_etriers / 2) ** 2
-        pas_theorique = (area_etrier * fyd * d * 10) / (V * 1000)
-        pas_arrondi = int((pas_theorique + 4.9) // 5) * 5
-        pas_choisi = st.number_input("Pas choisi (mm)", min_value=5, value=pas_arrondi, step=5)
 
-        ok_pas = pas_choisi <= pas_theorique
-        col1, col2 = st.columns([10, 1])
-        with col1:
-            st.write(f"Pas théorique : {pas_theorique:.0f} mm")
-        with col2:
-            st.markdown("✅" if ok_pas else "❌")
+        if V > 0:
+            pas_theorique = (area_etrier * fyd * d * 10) / (V * 1000)
+            pas_arrondi = int((pas_theorique + 4.9) // 5) * 5
+            pas_choisi = st.number_input("Pas choisi (mm)", min_value=5, value=pas_arrondi, step=5)
+
+            ok_pas = pas_choisi <= pas_theorique
+            col1, col2 = st.columns([10, 1])
+            with col1:
+                st.write(f"Pas théorique : {pas_theorique:.0f} mm")
+            with col2:
+                st.markdown("✅" if ok_pas else "❌")
 
     if v_sup and V > 0 and 'V_lim' in locals() and V_lim > 0:
         tau2 = V_lim / (0.75 * b * h)
@@ -186,5 +157,3 @@ with col_droite:
             st.write("Vérification τ réduit ≤ τ_lim")
         with col2:
             st.markdown("✅" if tau2 <= tau_lim else "❌")
-
-    st.markdown('</div>', unsafe_allow_html=True)
