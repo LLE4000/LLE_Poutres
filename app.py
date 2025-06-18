@@ -5,27 +5,6 @@ from datetime import datetime
 st.set_page_config(page_title="Dimensionnement Poutre BA", layout="wide")
 st.title("Poutre en béton armé")
 
-# --- CSS PERSONNALISÉ ---
-st.markdown("""
-    <style>
-    .bloc {
-        border: 1px solid #ccc;
-        padding: 1.2rem;
-        border-radius: 10px;
-        margin-bottom: 1.5rem;
-    }
-    .fond-bleu {
-        background-color: #e3f2fd;
-    }
-    .fond-jaune {
-        background-color: #fff9c4;
-    }
-    .bloc * {
-        color: black !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # --- RÉINITIALISATION ---
 if st.button("🔄 Réinitialiser"):
     st.rerun()
