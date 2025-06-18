@@ -13,10 +13,7 @@ if st.button("🔄 Réinitialiser"):
 # --- 1. INFOS PROJET ---
 with st.container():
     st.markdown("### Informations sur le projet")
-    col1, col2 = st.columns(2)
-    with col1:
         nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
-    with col2:
         partie = st.text_input("", placeholder="Partie", key="partie")      
     
     col1, col2 = st.columns(2)
@@ -28,19 +25,17 @@ with st.container():
 # --- 2. CARACTÉRISTIQUES DE LA POUTRE ---
 with st.container():
     st.markdown("### Caractéristiques de la poutre")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         b = st.number_input("Largeur (cm)", 10, 120, 40, key="b")
     with col2:
         h = st.number_input("Hauteur (cm)", 10, 150, 60, key="h")
     with col3:
         enrobage = st.number_input("Enrobage (cm)", 2, 10, 3, key="enrobage")
-
-    col4, col5 = st.columns(2)
     with col4:
         beton = st.selectbox("Classe de béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2)
     with col5:
-        fyk = st.selectbox("Qualité d'acier (fyk)", ["400", "500", "600"], index=1)
+        fyk = st.selectbox("Qualité d'acier", ["400", "500", "600"], index=1)
 
 # --- BASE DE DONNÉES MATÉRIAUX ---
 fck_dict = {"C20/25": 20, "C25/30": 25, "C30/37": 30, "C35/45": 35, "C40/50": 40}
