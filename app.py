@@ -85,9 +85,9 @@ with col_gauche:
 with col_droite:
     with st.container():
         # Le fond-blanc commence ici
-        st.markdown('<div class="fond-blanc">', unsafe_allow_html=True)
-
         st.markdown("### Dimensionnement")
+        
+        st.markdown('<div class="fond-blanc">', unsafe_allow_html=True)       
 
         d = h - enrobage
         st.markdown(f"**Hauteur utile d = h - enrobage = {h} - {enrobage} = {d:.1f} cm**")
