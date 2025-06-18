@@ -5,7 +5,7 @@ from datetime import datetime
 st.set_page_config(page_title="Dimensionnement Poutre BA", layout="wide")
 st.title("Poutre en béton armé")
 
-# --- STYLES ---
+# --- STYLES CSS ---
 st.markdown("""
     <style>
     .bloc-dimensionnement {
@@ -38,6 +38,7 @@ with col_gauche:
     with col2:
         indice = st.text_input("", placeholder="Indice", value="0", key="indice")
 
+    # CARACTÉRISTIQUES
     st.markdown("### Caractéristiques de la poutre")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -51,12 +52,14 @@ with col_gauche:
     with col5:
         fyk = st.selectbox("Qualité d'acier", ["400", "500", "600"], index=1)
 
+    # BASE DE DONNÉES
     fck_dict = {"C20/25": 20, "C25/30": 25, "C30/37": 30, "C35/45": 35, "C40/50": 40}
     tau_lim_dict = {"C20/25": 0.50, "C25/30": 0.60, "C30/37": 0.70, "C35/45": 0.80, "C40/50": 0.85}
     fcd = fck_dict[beton] / 1.5
     fyd = int(fyk) / 1.15
     tau_lim = tau_lim_dict[beton]
 
+    # SOLLICITATIONS
     st.markdown("### Sollicitations")
     col1, col2 = st.columns(2)
     with col1:
