@@ -15,19 +15,15 @@ st.markdown("""
         margin-bottom: 1.5rem;
     }
 
-    .fond-bleu {
-        background-color: #e3f2fd;
-    }
-
     .fond-blanc {
         background-color: white;
-        padding: 1.2rem;
+        padding: 1.5rem;
         border-radius: 10px;
         border: 1px solid #ccc;
         margin-bottom: 1.5rem;
     }
 
-    .fond-blanc * {
+    .bloc * {
         color: black !important;
     }
     </style>
@@ -42,53 +38,48 @@ col_gauche, col_droite = st.columns([2, 3])
 
 # ----------- COLONNE GAUCHE -----------
 with col_gauche:
-    with st.container():
-        st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
+    # INFOS PROJET
+    st.markdown("### Informations sur le projet")
+    nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
+    partie = st.text_input("", placeholder="Partie", key="partie")
+    col1, col2 = st.columns(2)
+    with col1:
+        date = st.text_input("", placeholder="Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"), key="date")
+    with col2:
+        indice = st.text_input("", placeholder="Indice", value="0", key="indice")
 
-        # INFOS PROJET
-        st.markdown("### Informations sur le projet")
-        nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
-        partie = st.text_input("", placeholder="Partie", key="partie")
-        col1, col2 = st.columns(2)
-        with col1:
-            date = st.text_input("", placeholder="Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"), key="date")
-        with col2:
-            indice = st.text_input("", placeholder="Indice", value="0", key="indice")
+    st.markdown("### Caractéristiques de la poutre")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        b = st.number_input("Largeur (cm)", 10, 120, 40, key="b")
+    with col2:
+        h = st.number_input("Hauteur (cm)", 10, 150, 60, key="h")
+    with col3:
+        enrobage = st.number_input("Enrobage (cm)", 2, 10, 3, key="enrobage")
+    with col4:
+        beton = st.selectbox("Classe de béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2)
+    with col5:
+        fyk = st.selectbox("Qualité d'acier", ["400", "500", "600"], index=1)
 
-        st.markdown("### Caractéristiques de la poutre")
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            b = st.number_input("Largeur (cm)", 10, 120, 40, key="b")
-        with col2:
-            h = st.number_input("Hauteur (cm)", 10, 150, 60, key="h")
-        with col3:
-            enrobage = st.number_input("Enrobage (cm)", 2, 10, 3, key="enrobage")
-        with col4:
-            beton = st.selectbox("Classe de béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2)
-        with col5:
-            fyk = st.selectbox("Qualité d'acier", ["400", "500", "600"], index=1)
+    # BASE DE DONNÉES
+    fck_dict = {"C20/25": 20, "C25/30": 25, "C30/37": 30, "C35/45": 35, "C40/50": 40}
+    tau_lim_dict = {"C20/25": 0.50, "C25/30": 0.60, "C30/37": 0.70, "C35/45": 0.80, "C40/50": 0.85}
+    fcd = fck_dict[beton] / 1.5
+    fyd = int(fyk) / 1.15
+    tau_lim = tau_lim_dict[beton]
 
-        # BASE DE DONNÉES
-        fck_dict = {"C20/25": 20, "C25/30": 25, "C30/37": 30, "C35/45": 35, "C40/50": 40}
-        tau_lim_dict = {"C20/25": 0.50, "C25/30": 0.60, "C30/37": 0.70, "C35/45": 0.80, "C40/50": 0.85}
-        fcd = fck_dict[beton] / 1.5
-        fyd = int(fyk) / 1.15
-        tau_lim = tau_lim_dict[beton]
-
-        st.markdown("### Sollicitations")
-        col1, col2 = st.columns(2)
-        with col1:
-            M = st.number_input("Moment inférieur M (kNm)", 0.0, step=10.0)
-            m_sup = st.checkbox("Ajouter un moment supérieur")
-            if m_sup:
-                M_sup = st.number_input("Moment supérieur M_sup (kNm)", 0.0, step=10.0)
-        with col2:
-            V = st.number_input("Effort tranchant V (kN)", 0.0, step=10.0)
-            v_sup = st.checkbox("Ajouter un effort tranchant réduit")
-            if v_sup:
-                V_lim = st.number_input("Effort tranchant réduit V_limite (kN)", 0.0, step=10.0)
-
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("### Sollicitations")
+    col1, col2 = st.columns(2)
+    with col1:
+        M = st.number_input("Moment inférieur M (kNm)", 0.0, step=10.0)
+        m_sup = st.checkbox("Ajouter un moment supérieur")
+        if m_sup:
+            M_sup = st.number_input("Moment supérieur M_sup (kNm)", 0.0, step=10.0)
+    with col2:
+        V = st.number_input("Effort tranchant V (kN)", 0.0, step=10.0)
+        v_sup = st.checkbox("Ajouter un effort tranchant réduit")
+        if v_sup:
+            V_lim = st.number_input("Effort tranchant réduit V_limite (kN)", 0.0, step=10.0)
 
 # ----------- COLONNE DROITE -----------
 with col_droite:
