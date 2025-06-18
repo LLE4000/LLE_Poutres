@@ -8,19 +8,15 @@ st.title("Poutre en béton armé")
 # --- STYLES CSS ---
 st.markdown("""
     <style>
-    .bloc-dimensionnement {
-        background-color: white;
-        color: black !important;
-        padding: 2rem;
-        border-radius: 12px;
-        border: 1px solid #ccc;
-        margin-bottom: 2rem;
-    }
-    .bloc-dimensionnement h3, .bloc-dimensionnement h4, .bloc-dimensionnement p {
-        color: black !important;
-    }
-    .bloc-dimensionnement * {
-        color: black !important;
+    .titre-encadre {
+        background-color: #e3f2fd;
+        padding: 0.5rem 1rem;
+        border-left: 5px solid #2196f3;
+        border-radius: 5px;
+        margin-top: 1.5rem;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: black;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -35,7 +31,7 @@ col_gauche, col_droite = st.columns([2, 3])
 # ----------- COLONNE GAUCHE -----------
 with col_gauche:
     # INFOS PROJET
-    st.markdown("### Informations sur le projet")
+    st.markdown('<div class="titre-encadre">Informations sur le projet</div>', unsafe_allow_html=True)
     nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
     partie = st.text_input("", placeholder="Partie", key="partie")
     col1, col2 = st.columns(2)
@@ -45,7 +41,7 @@ with col_gauche:
         indice = st.text_input("", placeholder="Indice", value="0", key="indice")
 
     # CARACTÉRISTIQUES
-    st.markdown("### Caractéristiques de la poutre")
+    st.markdown('<div class="titre-encadre">Caractéristiques de la poutre</div>', unsafe_allow_html=True)
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         b = st.number_input("Largeur (cm)", 10, 120, 40, key="b")
@@ -66,7 +62,7 @@ with col_gauche:
     tau_lim = tau_lim_dict[beton]
 
     # SOLLICITATIONS
-    st.markdown("### Sollicitations")
+    st.markdown('<div class="titre-encadre">Sollicitations</div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         M = st.number_input("Moment inférieur M (kNm)", 0.0, step=10.0)
@@ -81,98 +77,94 @@ with col_gauche:
 
 # ----------- COLONNE DROITE -----------
 with col_droite:
-    with st.container():
-        st.markdown('<div class="bloc-dimensionnement">', unsafe_allow_html=True)
-        st.markdown("### Dimensionnement")
+    st.markdown('<div class="titre-encadre">Dimensionnement</div>', unsafe_allow_html=True)
 
-        d = h - enrobage
-        st.markdown(f"**Hauteur utile d = h - enrobage = {h} - {enrobage} = {d:.1f} cm**")
+    d = h - enrobage
+    st.markdown(f"**Hauteur utile d = h - enrobage = {h} - {enrobage} = {d:.1f} cm**")
 
-        d_valide = d <= 0.9 * h
+    d_valide = d <= 0.9 * h
+    col1, col2 = st.columns([10, 1])
+    with col1:
+        st.write("Vérification de la hauteur utile (d ≤ 0.9·h)")
+    with col2:
+        st.markdown("✅" if d_valide else "❌")
+
+    if M > 0:
+        Mu = M * 1e6
+        As_req = Mu / (fyd * 10 * 0.9 * d)
+        As_min = 0.0013 * b * h
+        As_max = 0.04 * b * h
+
+        st.markdown(f"**Section requise Aₛ = {As_req:.1f} mm²**")
+
+        col1, col2, col3 = st.columns([3, 3, 4])
+        with col1:
+            n_barres = st.selectbox("Nb barres", list(range(1, 8)), key="n_as")
+        with col2:
+            diam_barres = st.selectbox("Ø (mm)", [8, 10, 12, 14, 16, 20], key="ø_as")
+        with col3:
+            As_choisi = 3.14 * (diam_barres / 2) ** 2 * n_barres
+            st.markdown(f"Section = **{As_choisi:.0f} mm²**")
+
+        ok_As = As_min <= As_choisi <= As_max and As_choisi >= As_req
         col1, col2 = st.columns([10, 1])
         with col1:
-            st.write("Vérification de la hauteur utile (d ≤ 0.9·h)")
+            st.write("Vérification As entre As_min et As_max et ≥ As_req")
         with col2:
-            st.markdown("✅" if d_valide else "❌")
+            st.markdown("✅" if ok_As else "❌")
 
-        if M > 0:
-            Mu = M * 1e6
-            As_req = Mu / (fyd * 10 * 0.9 * d)
-            As_min = 0.0013 * b * h
-            As_max = 0.04 * b * h
+    if m_sup and M_sup > 0:
+        Mu_sup = M_sup * 1e6
+        As_sup = Mu_sup / (fyd * 10 * 0.9 * d)
+        st.markdown(f"**Section Aₛ_sup = {As_sup:.1f} mm²**")
+        col1, col2, col3 = st.columns([3, 3, 4])
+        with col1:
+            n_sup = st.selectbox("Nb barres sup", list(range(1, 8)), key="n_sup")
+        with col2:
+            diam_sup = st.selectbox("Ø sup (mm)", [8, 10, 12, 14, 16], key="ø_sup")
+        with col3:
+            As_sup_choisi = 3.14 * (diam_sup / 2) ** 2 * n_sup
+            st.markdown(f"Section = **{As_sup_choisi:.0f} mm²**")
 
-            st.markdown(f"**Section requise Aₛ = {As_req:.1f} mm²**")
+        ok_As_sup = As_min <= As_sup_choisi <= As_max and As_sup_choisi >= As_sup
+        col1, col2 = st.columns([10, 1])
+        with col1:
+            st.write("Vérification As_sup entre As_min et As_max et ≥ As_sup")
+        with col2:
+            st.markdown("✅" if ok_As_sup else "❌")
 
-            col1, col2, col3 = st.columns([3, 3, 4])
-            with col1:
-                n_barres = st.selectbox("Nb barres", list(range(1, 8)), key="n_as")
-            with col2:
-                diam_barres = st.selectbox("Ø (mm)", [8, 10, 12, 14, 16, 20], key="ø_as")
-            with col3:
-                As_choisi = 3.14 * (diam_barres / 2) ** 2 * n_barres
-                st.markdown(f"Section = **{As_choisi:.0f} mm²**")
+    if V > 0:
+        tau = V / (0.75 * b * h)
+        st.markdown(f"**τ = {tau:.2f} MPa / τ_lim = {tau_lim:.2f} MPa**")
+        col1, col2 = st.columns([10, 1])
+        with col1:
+            st.write("Vérification τ ≤ τ_lim")
+        with col2:
+            st.markdown("✅" if tau <= tau_lim else "❌")
 
-            ok_As = As_min <= As_choisi <= As_max and As_choisi >= As_req
-            col1, col2 = st.columns([10, 1])
-            with col1:
-                st.write("Vérification As entre As_min et As_max et ≥ As_req")
-            with col2:
-                st.markdown("✅" if ok_As else "❌")
+        col1, col2 = st.columns(2)
+        with col1:
+            n_etriers = st.selectbox("Nb brins", [2, 3, 4], key="n_etriers")
+        with col2:
+            diam_etriers = st.selectbox("Ø étrier (mm)", [6, 8, 10], key="ø_etrier")
 
-        if m_sup and M_sup > 0:
-            Mu_sup = M_sup * 1e6
-            As_sup = Mu_sup / (fyd * 10 * 0.9 * d)
-            st.markdown(f"**Section Aₛ_sup = {As_sup:.1f} mm²**")
-            col1, col2, col3 = st.columns([3, 3, 4])
-            with col1:
-                n_sup = st.selectbox("Nb barres sup", list(range(1, 8)), key="n_sup")
-            with col2:
-                diam_sup = st.selectbox("Ø sup (mm)", [8, 10, 12, 14, 16], key="ø_sup")
-            with col3:
-                As_sup_choisi = 3.14 * (diam_sup / 2) ** 2 * n_sup
-                st.markdown(f"Section = **{As_sup_choisi:.0f} mm²**")
+        area_etrier = n_etriers * 3.14 * (diam_etriers / 2) ** 2
+        pas_theorique = (area_etrier * fyd * d * 10) / (V * 1000)
+        pas_arrondi = int((pas_theorique + 4.9) // 5) * 5
+        pas_choisi = st.number_input("Pas choisi (mm)", min_value=5, value=pas_arrondi, step=5)
 
-            ok_As_sup = As_min <= As_sup_choisi <= As_max and As_sup_choisi >= As_sup
-            col1, col2 = st.columns([10, 1])
-            with col1:
-                st.write("Vérification As_sup entre As_min et As_max et ≥ As_sup")
-            with col2:
-                st.markdown("✅" if ok_As_sup else "❌")
+        ok_pas = pas_choisi <= pas_theorique
+        col1, col2 = st.columns([10, 1])
+        with col1:
+            st.write(f"Pas théorique : {pas_theorique:.0f} mm")
+        with col2:
+            st.markdown("✅" if ok_pas else "❌")
 
-        if V > 0:
-            tau = V / (0.75 * b * h)
-            st.markdown(f"**τ = {tau:.2f} MPa / τ_lim = {tau_lim:.2f} MPa**")
-            col1, col2 = st.columns([10, 1])
-            with col1:
-                st.write("Vérification τ ≤ τ_lim")
-            with col2:
-                st.markdown("✅" if tau <= tau_lim else "❌")
-
-            col1, col2 = st.columns(2)
-            with col1:
-                n_etriers = st.selectbox("Nb brins", [2, 3, 4], key="n_etriers")
-            with col2:
-                diam_etriers = st.selectbox("Ø étrier (mm)", [6, 8, 10], key="ø_etrier")
-
-            area_etrier = n_etriers * 3.14 * (diam_etriers / 2) ** 2
-            pas_theorique = (area_etrier * fyd * d * 10) / (V * 1000)
-            pas_arrondi = int((pas_theorique + 4.9) // 5) * 5
-            pas_choisi = st.number_input("Pas choisi (mm)", min_value=5, value=pas_arrondi, step=5)
-
-            ok_pas = pas_choisi <= pas_theorique
-            col1, col2 = st.columns([10, 1])
-            with col1:
-                st.write(f"Pas théorique : {pas_theorique:.0f} mm")
-            with col2:
-                st.markdown("✅" if ok_pas else "❌")
-
-        if v_sup and V > 0 and 'V_lim' in locals() and V_lim > 0:
-            tau2 = V_lim / (0.75 * b * h)
-            st.markdown(f"**Avec effort réduit : τ = {tau2:.2f} MPa**")
-            col1, col2 = st.columns([10, 1])
-            with col1:
-                st.write("Vérification τ réduit ≤ τ_lim")
-            with col2:
-                st.markdown("✅" if tau2 <= tau_lim else "❌")
-
-        st.markdown('</div>', unsafe_allow_html=True)
+    if v_sup and V > 0 and 'V_lim' in locals() and V_lim > 0:
+        tau2 = V_lim / (0.75 * b * h)
+        st.markdown(f"**Avec effort réduit : τ = {tau2:.2f} MPa**")
+        col1, col2 = st.columns([10, 1])
+        with col1:
+            st.write("Vérification τ réduit ≤ τ_lim")
+        with col2:
+            st.markdown("✅" if tau2 <= tau_lim else "❌")
