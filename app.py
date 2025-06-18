@@ -5,18 +5,26 @@ from datetime import datetime
 st.set_page_config(page_title="Dimensionnement Poutre BA", layout="wide")
 st.title("Poutre en béton armé")
 
-# --- STYLES CSS ---
+# --- STYLES ---
 st.markdown("""
     <style>
-    .titre-encadre {
+    .bloc {
+        border: 1px solid #ccc;
+        padding: 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .fond-bleu {
         background-color: #e3f2fd;
-        padding: 0.5rem 1rem;
-        border-left: 5px solid #2196f3;
-        border-radius: 5px;
-        margin-top: 1.5rem;
-        font-weight: bold;
-        font-size: 1.2rem;
-        color: black;
+    }
+
+    .fond-jaune {
+        background-color: #fff9c4;
+    }
+
+    .bloc * {
+        color: black !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -28,20 +36,25 @@ if st.button("🔄 Réinitialiser"):
 # --- COLONNES PRINCIPALES ---
 col_gauche, col_droite = st.columns([2, 3])
 
-# ----------- COLONNE GAUCHE -----------
+# ----------- GAUCHE -----------
 with col_gauche:
+
     # INFOS PROJET
-    st.markdown('<div class="titre-encadre">Informations sur le projet</div>', unsafe_allow_html=True)
+    st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
+    st.markdown("### Informations sur le projet")
     nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
     partie = st.text_input("", placeholder="Partie", key="partie")
     col1, col2 = st.columns(2)
     with col1:
-        date = st.text_input("", placeholder="Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"), key="date")
+        date = st.text_input("", placeholder="Date (jj/mm/aaaa)",
+                             value=datetime.today().strftime("%d/%m/%Y"), key="date")
     with col2:
         indice = st.text_input("", placeholder="Indice", value="0", key="indice")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # CARACTÉRISTIQUES
-    st.markdown('<div class="titre-encadre">Caractéristiques de la poutre</div>', unsafe_allow_html=True)
+    st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
+    st.markdown("### Caractéristiques de la poutre")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         b = st.number_input("Largeur (cm)", 10, 120, 40, key="b")
@@ -53,6 +66,7 @@ with col_gauche:
         beton = st.selectbox("Classe de béton", ["C20/25", "C25/30", "C30/37", "C35/45", "C40/50"], index=2)
     with col5:
         fyk = st.selectbox("Qualité d'acier", ["400", "500", "600"], index=1)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # BASE DE DONNÉES
     fck_dict = {"C20/25": 20, "C25/30": 25, "C30/37": 30, "C35/45": 35, "C40/50": 40}
@@ -62,7 +76,8 @@ with col_gauche:
     tau_lim = tau_lim_dict[beton]
 
     # SOLLICITATIONS
-    st.markdown('<div class="titre-encadre">Sollicitations</div>', unsafe_allow_html=True)
+    st.markdown('<div class="bloc fond-bleu">', unsafe_allow_html=True)
+    st.markdown("### Sollicitations")
     col1, col2 = st.columns(2)
     with col1:
         M = st.number_input("Moment inférieur M (kNm)", 0.0, step=10.0)
@@ -74,10 +89,12 @@ with col_gauche:
         v_sup = st.checkbox("Ajouter un effort tranchant réduit")
         if v_sup:
             V_lim = st.number_input("Effort tranchant réduit V_limite (kN)", 0.0, step=10.0)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ----------- COLONNE DROITE -----------
+# ----------- DROITE -----------
 with col_droite:
-    st.markdown('<div class="titre-encadre">Dimensionnement</div>', unsafe_allow_html=True)
+    st.markdown('<div class="bloc fond-jaune">', unsafe_allow_html=True)
+    st.markdown("### Dimensionnement")
 
     d = h - enrobage
     st.markdown(f"**Hauteur utile d = h - enrobage = {h} - {enrobage} = {d:.1f} cm**")
@@ -136,6 +153,7 @@ with col_droite:
     if V > 0:
         tau = V / (0.75 * b * h)
         st.markdown(f"**τ = {tau:.2f} MPa / τ_lim = {tau_lim:.2f} MPa**")
+
         col1, col2 = st.columns([10, 1])
         with col1:
             st.write("Vérification τ ≤ τ_lim")
@@ -163,8 +181,11 @@ with col_droite:
     if v_sup and V > 0 and 'V_lim' in locals() and V_lim > 0:
         tau2 = V_lim / (0.75 * b * h)
         st.markdown(f"**Avec effort réduit : τ = {tau2:.2f} MPa**")
+
         col1, col2 = st.columns([10, 1])
         with col1:
             st.write("Vérification τ réduit ≤ τ_lim")
         with col2:
             st.markdown("✅" if tau2 <= tau_lim else "❌")
+
+    st.markdown('</div>', unsafe_allow_html=True)
