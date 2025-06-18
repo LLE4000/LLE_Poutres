@@ -48,17 +48,18 @@ tau_lim = tau_lim_dict[beton]
 with st.container():
     st.markdown("### Sollicitations")
     col1, col2 = st.columns(2)
+
     with col1:
         M = st.number_input("Moment inférieur M (kNm)", 0.0, step=10.0)
+        m_sup = st.checkbox("Ajouter un moment supérieur")
+        if m_sup:
+            M_sup = st.number_input("Moment supérieur M_sup (kNm)", 0.0, step=10.0)
+
     with col2:
         V = st.number_input("Effort tranchant V (kN)", 0.0, step=10.0)
-
-    m_sup = st.checkbox("Ajouter un moment supérieur")
-    v_sup = st.checkbox("Ajouter un effort tranchant réduit")
-    if m_sup:
-        M_sup = st.number_input("Moment supérieur M_sup (kNm)", 0.0, step=10.0)
-    if v_sup:
-        V_lim = st.number_input("Effort tranchant réduit V_limite (kN)", 0.0, step=10.0)
+        v_sup = st.checkbox("Ajouter un effort tranchant réduit")
+        if v_sup:
+            V_lim = st.number_input("Effort tranchant réduit V_limite (kN)", 0.0, step=10.0)
 
 # --- 4. DIMENSIONNEMENT ---
 with st.container():
