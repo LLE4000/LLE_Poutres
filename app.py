@@ -13,9 +13,9 @@ if st.button("🔄 Réinitialiser"):
 # --- 1. INFOS PROJET ---
 with st.container():
     st.markdown("### Informations sur le projet")
-        nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
-        partie = st.text_input("", placeholder="Partie", key="partie")      
-    
+    nom = st.text_input("", placeholder="Nom du projet", key="nom_projet")
+    partie = st.text_input("", placeholder="Partie", key="partie")      
+
     col1, col2 = st.columns(2)
     with col1:
         date = st.text_input("", placeholder="Date (jj/mm/aaaa)", value=datetime.today().strftime("%d/%m/%Y"), key="date")
