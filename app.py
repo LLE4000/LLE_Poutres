@@ -93,8 +93,7 @@ with col_gauche:
 
 # ----------- DROITE -----------
 with col_droite:
-    st.markdown('<div class="bloc fond-jaune">', unsafe_allow_html=True)
-    st.markdown("### Dimensionnement")
+    st.markdown('<div class="bloc fond-jaune"><h3>Dimensionnement</h3>', unsafe_allow_html=True)
 
     d = h - enrobage
     st.markdown(f"**Hauteur utile d = h - enrobage = {h} - {enrobage} = {d:.1f} cm**")
